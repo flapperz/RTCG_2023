@@ -6,7 +6,7 @@
 #include <fstream>
 #include <cmath>
 
-#define _WIN32
+#define OSX
 
 #ifdef _WIN32
 #	include <windows.h>

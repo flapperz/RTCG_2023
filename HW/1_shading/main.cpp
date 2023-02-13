@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+#include <stdio.h>
+
 
 #define OSX
 
@@ -114,10 +116,45 @@ void setPixel(int x, int y, GLfloat r, GLfloat g, GLfloat b) {
 	glVertex2f(x+0.5, y+0.5);
 }
 
+vec3 phongLocalShader(vec3 I, vec3 l, vec3 n, vec3 v) {
+	// I: light color
+	// l: light direction
+	// n: normal
+	// v: viewing angle
+
+	// diffuse
+	vec3 col(0.0f);
+	// vec3 col = max(material.kd * (l * n), 0.0f);
+	
+	// diffuse
+	col += prod(material.kd, max(l * n, 0.0f) * I);
+
+	// specular
+	vec3 r = -l + 2*(l*n)*n;
+	col += prod(material.ks, I*pow(max(r*v, 0.0f), material.sp) ); 
+
+	// ambient
+	col += prod(I, material.ka);
+	
+	
+	return col;
+}
+
 vec3 computeShadedColor(vec3 pos) {
 
-	// TODO: Your shading code mostly go here
-	return vec3(0.1f, 0.1f, 0.1f);
+	vec3 col(0.0f);
+
+	vec3 n = pos; n.normalize();
+	vec3 v(0.0f, 0.0f, 1.0f);
+
+	for (Light light : lights)
+	{	
+		vec3 l = light.type == light.DIRECTIONAL_LIGHT ? light.posDir : light.posDir - pos;
+		l.normalize();
+		col += phongLocalShader(light.color, l, n, v);
+	}
+	
+	return col;
 }
 
 //****************************************************
@@ -145,7 +182,7 @@ void myDisplay() {
 			float y = i * idrawRadius;
 			float z = sqrtf(1.0f - x*x - y*y);
 			vec3 pos(x,y,z); // Position on the surface of the sphere
-
+			
 			vec3 col = computeShadedColor(pos);
 
 			// Set the red pixel
